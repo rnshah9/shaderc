@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine
+FROM alpine as builder
 
 RUN apk add --update \
     build-base \
@@ -41,3 +41,12 @@ RUN rm -rf shaderc
 
 WORKDIR /code
 
+
+RUN mkdir -p /deps
+RUN ldd /usr/local/bin/glslc | tr -s '[:blank:]' '\n' | grep '^/' | xargs -I % sh -c 'cp % /deps;'
+
+FROM builder as package
+
+COPY --from=builder /deps /deps
+COPY --from=builder /usr/local/bin/glslc /usr/local/bin/glslc
+ENV LD_LIBRARY_PATH=/deps
