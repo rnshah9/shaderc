@@ -2,4 +2,4 @@ project: shaderc
 target: glslc
 
 cmds:
-  - cmd: /usr/local/bin/glslc @@
+  - cmd: /install/bin/glslc @@

@@ -32,21 +32,11 @@ RUN ./utils/git-sync-deps
 WORKDIR build
 RUN cmake -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/install \
     .. \
   && ninja install
 
-WORKDIR /root
-RUN rm -rf shaderc
-
-WORKDIR /code
-
-
-RUN mkdir -p /deps
-RUN ldd /usr/local/bin/glslc | tr -s '[:blank:]' '\n' | grep '^/' | xargs -I % sh -c 'cp % /deps;'
-
-FROM builder as package
-
-COPY --from=builder /deps /deps
-COPY --from=builder /usr/local/bin/glslc /usr/local/bin/glslc
-ENV LD_LIBRARY_PATH=/deps
+FROM alpine as package
+RUN apk add --update \
+    build-base 
+COPY --from=builder /install /install
