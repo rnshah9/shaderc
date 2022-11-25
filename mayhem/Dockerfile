@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine as builder
+FROM ubuntu:22.04 as builder
 
-RUN apk add --update \
-    build-base \
-    cmake \
-    git \
-    ninja \
-    python3 \
-    py-pip \
-  && rm -rf /var/cache/apk/*
+RUN apt-get update
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential git cmake ninja-build python-is-python3 clang
 
 WORKDIR /root
 COPY . shaderc
+RUN rm ~/shaderc/mayhem/fuzz_string_piece.cpp
 
 WORKDIR shaderc
 RUN ./utils/git-sync-deps
@@ -35,8 +31,10 @@ RUN cmake -GNinja \
     -DCMAKE_INSTALL_PREFIX=/install \
     .. \
   && ninja install
+COPY ./mayhem/fuzz_string_piece.cpp /root/shaderc/mayhem/
+RUN clang++ ~/shaderc/mayhem/fuzz_string_piece.cpp -fsanitize=fuzzer,address -I ~/shaderc/libshaderc_util/include/libshaderc_util/ -o /fuzz
 
-FROM alpine as package
-RUN apk add --update \
-    build-base 
+
+FROM ubuntu:22.04 as package
 COPY --from=builder /install /install
+COPY --from=builder /fuzz /fuzz_string_piece
