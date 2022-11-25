@@ -1,7 +1,5 @@
 project: shaderc
-target: glslc2
+target: string-piece
 
 cmds:
-  # - cmd: /install/bin/glslc @@
-  - cmd: /fuzz
-image: ghcr.io/rnshah9/playground:shaderc
+  - cmd: /fuzz_string_piece
